@@ -4,10 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "../../vexora-websss/node_modules/.bin/vite",
-    "build": "../../vexora-websss/node_modules/.bin/tsc -b && vite build",
-    "lint": "../../vexora-websss/node_modules/.bin/eslint .",
-    "preview": "../../vexora-websss/node_modules/.bin/vite preview"
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
   },
   "dependencies": {
     "react": "^19.2.0",

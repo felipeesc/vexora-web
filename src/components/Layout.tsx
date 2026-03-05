@@ -96,7 +96,7 @@ export default function Layout() {
     );
 
     return (
-        <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#f5f5f5" }}>
+        <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default" }}>
             {/* AppBar mobile */}
             {isMobile && (
                 <AppBar position="fixed" sx={{ zIndex: theme.zIndex.drawer + 1 }}>

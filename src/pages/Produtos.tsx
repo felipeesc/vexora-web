@@ -6,11 +6,10 @@ import {
 import { Add, Edit, Delete } from "@mui/icons-material";
 import { useEffect, useState, useCallback } from "react";
 import { produtoService } from "../services/produtoService";
+import { formatBRL } from "../utils/format";
 import { CategoriaProduto, UnidadeMedida } from "../types";
 import type { ProdutoResponse, ProdutoRequest } from "../types";
 
-const formatBRL = (v: number) =>
-    v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 const emptyForm: ProdutoRequest = {
     nome: "",

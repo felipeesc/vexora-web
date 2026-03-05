@@ -8,10 +8,9 @@ import {
 import { useEffect, useState, useCallback } from "react";
 import dayjs from "dayjs";
 import { relatorioService } from "../services/relatorioService";
+import { formatBRL } from "../utils/format";
 import type { FaturamentoDTO, ProdutoMaisVendidoDTO } from "../types";
 
-const formatBRL = (v: number) =>
-    v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export default function Relatorios() {
     const [tab, setTab] = useState(0);
@@ -110,7 +109,7 @@ export default function Relatorios() {
                         {data.map((p, i) => (
                             <TableRow key={p.produto}>
                                 <TableCell>
-                                    {i === 0 ? <EmojiEvents sx={{ color: "#ffc107", fontSize: 20 }} /> : i + 1}
+                                    {i === 0 ? <EmojiEvents color="warning" sx={{ fontSize: 20 }} /> : i + 1}
                                 </TableCell>
                                 <TableCell>{p.produto}</TableCell>
                                 <TableCell align="right">{p.quantidadeVendida}</TableCell>

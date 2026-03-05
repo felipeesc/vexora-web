@@ -23,15 +23,11 @@ import {
 import { useEffect, useState, useCallback } from "react";
 import { comandaService } from "../services/comandaService";
 import { produtoService } from "../services/produtoService";
+import { formatBRL } from "../utils/format";
 import type { ComandaResponse, ProdutoResponse } from "../types";
 
-/* ===================== UTILS ===================== */
-
-const formatBRL = (v: number) =>
-    v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export default function Comandas() {
-    const PRIMARY_BLUE = "#0d47a1";
 
     const [comandas, setComandas] = useState<ComandaResponse[]>([]);
     const [produtos, setProdutos] = useState<ProdutoResponse[]>([]);
@@ -208,7 +204,7 @@ export default function Comandas() {
                 </Paper>
                 <Paper sx={{ p: 3 }}>
                     <Typography variant="caption" color="text.secondary">MESAS OCUPADAS</Typography>
-                    <Typography variant="h5" fontWeight={900} sx={{ color: "#f57c00" }}>
+                    <Typography variant="h5" fontWeight={900} color="warning.main">
                         {mesasOcupadas}
                     </Typography>
                 </Paper>
@@ -243,7 +239,7 @@ export default function Comandas() {
                 {filtradas.map((c) => (
                     <Paper key={c.id} sx={{ p: 2.5, borderRadius: 3 }}>
                         <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                            <TableBar sx={{ color: PRIMARY_BLUE }} />
+                            <TableBar color="primary" />
                             <Box sx={{ flex: 1 }}>
                                 <Typography fontWeight={700}>
                                     {c.cliente || "Sem cliente"}
@@ -260,7 +256,7 @@ export default function Comandas() {
                             />
                         </Box>
 
-                        <Typography fontWeight={700} sx={{ color: "#d32f2f", mt: 1, fontSize: 18 }}>
+                        <Typography fontWeight={700} color="error.main" sx={{ mt: 1, fontSize: 18 }}>
                             {formatBRL(c.total)}
                         </Typography>
 
@@ -275,7 +271,6 @@ export default function Comandas() {
                             <Button
                                 variant="contained"
                                 size="small"
-                                sx={{ bgcolor: PRIMARY_BLUE }}
                                 onClick={() => {
                                     setComandaAtiva(c);
                                     setProdutoId("");
@@ -363,7 +358,7 @@ export default function Comandas() {
                         fullWidth
                     />
                     {produtoSelecionado && (
-                        <Paper sx={{ p: 2, bgcolor: "#f5f5f5" }}>
+                        <Paper sx={{ p: 2, bgcolor: "background.default" }}>
                             <Typography variant="caption" color="text.secondary">TOTAL DO LANÇAMENTO</Typography>
                             <Typography fontWeight={700} fontSize={18}>
                                 {formatBRL(produtoSelecionado.precoVenda * quantidade)}
@@ -446,7 +441,7 @@ export default function Comandas() {
                             </Paper>
                         ))
                     )}
-                    <Paper sx={{ p: 2, mt: 2, bgcolor: "#f5f5f5" }}>
+                    <Paper sx={{ p: 2, mt: 2, bgcolor: "background.default" }}>
                         <Typography variant="caption" color="text.secondary">TOTAL</Typography>
                         <Typography fontWeight={900} fontSize={20}>
                             {formatBRL(comandaAtiva?.total || 0)}

@@ -36,16 +36,7 @@ export default function Login() {
 
 
     return (
-        <Box
-            sx={{
-                width: "100vw",
-                minHeight: "100vh",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                background: "linear-gradient(180deg, #0d47a1 0%, #1976d2 100%)",
-            }}
-        >
+        <Box sx={authPageContainer}>
             <Box
                 sx={{
                     width: "100%",
@@ -123,7 +114,7 @@ export default function Login() {
                         Não tem uma conta?{" "}
                         <Box
                             component="span"
-                            sx={{ color: "#ff5722", fontWeight: 600, cursor: "pointer" }}
+                            sx={{ color: "secondary.main", fontWeight: 600, cursor: "pointer" }}
                             onClick={() => navigate("/criar-conta")}
                         >
                             Criar conta

@@ -79,7 +79,10 @@ export default function Estoque() {
                     </TableHead>
                     <TableBody>
                         {relatorio?.produtos.map((p) => (
-                            <TableRow key={p.id} sx={p.abaixoDoMinimo ? { bgcolor: "#fff3f3" } : {}}>
+                            <TableRow
+                                key={p.id}
+                                sx={p.abaixoDoMinimo ? { bgcolor: (t) => `${t.palette.error.main}10` } : {}}
+                            >
                                 <TableCell>{p.nome}</TableCell>
                                 <TableCell><Chip label={p.categoria} size="small" /></TableCell>
                                 <TableCell>{p.unidade}</TableCell>

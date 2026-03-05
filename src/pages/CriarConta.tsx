@@ -57,18 +57,7 @@ export default function CriarConta() {
     };
 
     return (
-        <Box
-            sx={{
-                width: "100vw",
-                minHeight: "100vh",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                background: "linear-gradient(180deg, #0d47a1 0%, #1976d2 100%)",
-                overflowX: "hidden",
-                px: { xs: 2, sm: 0 },
-            }}
-        >
+        <Box sx={authPageContainer}>
             <Box
                 sx={{
                     width: "100%",

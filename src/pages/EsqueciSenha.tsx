@@ -1,43 +1,13 @@
-import { Box, Button, TextField, Typography, Paper } from "@mui/material";
-import { useState } from "react";
+import { Box, Button, Typography, Paper, Alert } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { authPageContainer } from "../theme/authStyles";
 import vexoraLogo from "../assets/vexora-logo.png";
 
 export default function EsqueciSenha() {
     const navigate = useNavigate();
 
-    const [form, setForm] = useState({
-        username: "",
-        email: "",
-    });
-
-    const [loading, setLoading] = useState(false);
-    const [emailError, setEmailError] = useState(false);
-
-    const handleChange = (field: string, value: string) => {
-        setForm((prev) => ({ ...prev, [field]: value }));
-        if (field === "email") {
-            setEmailError(!/\S+@\S+\.\S+/.test(value));
-        }
-    };
-
-    const handleSubmit = () => {
-        alert("Funcionalidade em desenvolvimento. Entre em contato com o administrador.");
-    };
-
     return (
-        <Box
-            sx={{
-                width: "100vw",
-                minHeight: "100vh",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                background: "linear-gradient(180deg, #0d47a1 0%, #1976d2 100%)",
-                overflowX: "hidden",
-                px: { xs: 2, sm: 0 },
-            }}
-        >
+        <Box sx={authPageContainer}>
             <Box
                 sx={{
                     width: "100%",
@@ -66,39 +36,14 @@ export default function EsqueciSenha() {
                         borderRadius: { xs: 2, sm: 3 },
                     }}
                 >
-                    <Typography variant="h6" mb={3} textAlign="center">
+                    <Typography variant="h6" mb={2} textAlign="center">
                         Esqueci minha senha
                     </Typography>
 
-                    <TextField
-                        fullWidth
-                        label="Usuário"
-                        value={form.username}
-                        onChange={(e) => handleChange("username", e.target.value)}
-                        sx={{ mb: 2 }}
-                    />
-
-                    <TextField
-                        fullWidth
-                        label="Email"
-                        type="email"
-                        value={form.email}
-                        onChange={(e) => handleChange("email", e.target.value)}
-                        error={emailError}
-                        helperText={emailError ? "Email inválido" : ""}
-                        sx={{ mb: 3 }}
-                    />
-
-                    <Button
-                        fullWidth
-                        variant="contained"
-                        size="large"
-                        disabled={loading}
-                        onClick={handleSubmit}
-                        sx={{ py: 1.3, borderRadius: 2, mb: 1 }}
-                    >
-                        {loading ? "Enviando..." : "Enviar"}
-                    </Button>
+                    <Alert severity="info" sx={{ mb: 3 }}>
+                        Funcionalidade em desenvolvimento. Entre em contato com o
+                        administrador para redefinir sua senha.
+                    </Alert>
 
                     <Button
                         fullWidth

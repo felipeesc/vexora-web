@@ -1,10 +1,11 @@
 import { createContext, useContext, useState } from "react";
-import api from "../api/axios";
+import { authService } from "../services/authService";
 
 type AuthContextType = {
     token: string | null;
     login: (username: string, password: string) => Promise<void>;
     logout: () => void;
+    isAuthenticated: boolean;
 };
 
 const AuthContext = createContext<AuthContextType>(null!);
@@ -15,7 +16,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     async function login(username: string, password: string) {
-        const { data } = await api.post("/auth/login", { username, password });
+        const { data } = await authService.login({ username, password });
         localStorage.setItem("token", data.token);
         setToken(data.token);
     }
@@ -26,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     return (
-        <AuthContext.Provider value={{ token, login, logout }}>
+        <AuthContext.Provider value={{ token, login, logout, isAuthenticated: !!token }}>
             {children}
         </AuthContext.Provider>
     );

@@ -1,48 +1,39 @@
-import { Box, Button, TextField, Typography, Paper } from "@mui/material";
+import { Box, Button, TextField, Typography, Paper, Alert } from "@mui/material";
 import { useState } from "react";
-import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
 import vexoraLogo from "../assets/vexora-logo.png";
 
 export default function Login() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const navigate = useNavigate();
+    const { login } = useAuth();
 
     const handleLogin = async () => {
+        if (!username || !password) {
+            setError("Preencha usuário e senha");
+            return;
+        }
+
         try {
             setLoading(true);
-
-            const response = await axios.post(
-                "http://localhost:8080/auth/login",
-                {
-                    username,
-                    password,
-                },
-                {
-                    headers: {
-                        "Content-Type": "application/json",
-                        Accept: "application/json",
-                    },
-                }
-            );
-
-            const { token } = response.data;
-
-            // salva token
-            localStorage.setItem("token", token);
-
-            console.log("Token recebido:", token);
-
-            // aqui depois você redireciona pro dashboard
-            // navigate("/");
-
-        } catch (error) {
-            console.error("Erro no login:", error);
-            alert("Usuário ou senha inválidos");
+            setError("");
+            await login(username, password);
+            navigate("/");
+        } catch {
+            setError("Usuário ou senha inválidos");
         } finally {
             setLoading(false);
         }
     };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") handleLogin();
+    };
+
 
     return (
         <Box
@@ -76,11 +67,18 @@ export default function Login() {
                         Entrar
                     </Typography>
 
+                    {error && (
+                        <Alert severity="error" sx={{ mb: 2 }}>
+                            {error}
+                        </Alert>
+                    )}
+
                     <TextField
                         fullWidth
                         label="Usuário"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
+                        onKeyDown={handleKeyDown}
                         sx={{ mb: 2 }}
                     />
 
@@ -90,8 +88,25 @@ export default function Login() {
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        sx={{ mb: 3 }}
+                        onKeyDown={handleKeyDown}
+                        sx={{ mb: 1 }}
                     />
+
+                    {/* Esqueci minha senha */}
+                    <Typography
+                        fontSize={14}
+                        sx={{
+                            textAlign: "right",
+                            color: "#002ce1",
+                            cursor: "pointer",
+                            mb: 2,
+                            "&:hover": { textDecoration: "underline" },
+                        }}
+                        onClick={() => navigate("/esqueci-senha")}
+                    >
+                        Esqueci minha senha
+                    </Typography>
+
 
                     <Button
                         fullWidth
@@ -108,11 +123,8 @@ export default function Login() {
                         Não tem uma conta?{" "}
                         <Box
                             component="span"
-                            sx={{
-                                color: "#ff5722",
-                                fontWeight: 600,
-                                cursor: "pointer",
-                            }}
+                            sx={{ color: "#ff5722", fontWeight: 600, cursor: "pointer" }}
+                            onClick={() => navigate("/criar-conta")}
                         >
                             Criar conta
                         </Box>

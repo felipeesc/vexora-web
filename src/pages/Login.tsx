@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import vexoraLogo from "../assets/vexora-logo.png";
+import {authPageContainer} from "../theme/authStyles.ts";
 
 export default function Login() {
     const [username, setUsername] = useState("");
@@ -88,7 +89,7 @@ export default function Login() {
                         fontSize={14}
                         sx={{
                             textAlign: "right",
-                            color: "#002ce1",
+                            color: "primary.main",
                             cursor: "pointer",
                             mb: 2,
                             "&:hover": { textDecoration: "underline" },

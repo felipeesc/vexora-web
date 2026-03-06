@@ -24,6 +24,7 @@ import { useEffect, useState, useCallback } from "react";
 import { comandaService } from "../services/comandaService";
 import { produtoService } from "../services/produtoService";
 import { formatBRL } from "../utils/format";
+import { getErrorMessage } from "../utils/error";
 import type { ComandaResponse, ProdutoResponse } from "../types";
 
 

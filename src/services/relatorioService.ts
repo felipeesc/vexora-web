@@ -10,20 +10,20 @@ export const relatorioService = {
     faturamentoDiario: (data?: string) =>
         api.get<FaturamentoDTO>("/relatorios/faturamento/diario", { params: { data } }),
 
-    faturamentoSemanal: () =>
-        api.get<FaturamentoDTO>("/relatorios/faturamento/semanal"),
+    faturamentoSemanal: (data?: string) =>
+        api.get<FaturamentoDTO>("/relatorios/faturamento/semanal", { params: { data } }),
 
-    faturamentoMensal: () =>
-        api.get<FaturamentoDTO>("/relatorios/faturamento/mensal"),
+    faturamentoMensal: (data?: string) =>
+        api.get<FaturamentoDTO>("/relatorios/faturamento/mensal", { params: { data } }),
 
     produtosMaisVendidosDia: (data?: string) =>
         api.get<ProdutoMaisVendidoDTO[]>("/relatorios/produtos/mais-vendidos/dia", { params: { data } }),
 
-    produtosMaisVendidosSemana: () =>
-        api.get<ProdutoMaisVendidoDTO[]>("/relatorios/produtos/mais-vendidos/semana"),
+    produtosMaisVendidosSemana: (data?: string) =>
+        api.get<ProdutoMaisVendidoDTO[]>("/relatorios/produtos/mais-vendidos/semana", { params: { data } }),
 
-    produtosMaisVendidosMes: () =>
-        api.get<ProdutoMaisVendidoDTO[]>("/relatorios/produtos/mais-vendidos/mes"),
+    produtosMaisVendidosMes: (data?: string) =>
+        api.get<ProdutoMaisVendidoDTO[]>("/relatorios/produtos/mais-vendidos/mes", { params: { data } }),
 
     relatorioEstoque: () =>
         api.get<RelatorioEstoqueDTO>("/relatorios/estoque"),

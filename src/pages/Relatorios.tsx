@@ -33,8 +33,8 @@ export default function Relatorios() {
             setLoading(true);
             const [diario, semanal, mensal] = await Promise.all([
                 relatorioService.faturamentoDiario(dataDiario),
-                relatorioService.faturamentoSemanal(),
-                relatorioService.faturamentoMensal(),
+                relatorioService.faturamentoSemanal(dataDiario),
+                relatorioService.faturamentoMensal(dataDiario),
             ]);
             setFatDiario(diario.data);
             setFatSemanal(semanal.data);
@@ -51,8 +51,8 @@ export default function Relatorios() {
             setLoading(true);
             const [dia, semana, mes] = await Promise.all([
                 relatorioService.produtosMaisVendidosDia(dataDiario),
-                relatorioService.produtosMaisVendidosSemana(),
-                relatorioService.produtosMaisVendidosMes(),
+                relatorioService.produtosMaisVendidosSemana(dataDiario),
+                relatorioService.produtosMaisVendidosMes(dataDiario),
             ]);
             setVendidosDia(dia.data);
             setVendidosSemana(semana.data);
@@ -150,12 +150,13 @@ export default function Relatorios() {
                         <Box>
                             <Box sx={{ mb: 3 }}>
                                 <TextField
-                                    label="Data para faturamento diário"
+                                    label="Data de referência"
                                     type="date"
                                     value={dataDiario}
                                     onChange={(e) => setDataDiario(e.target.value)}
                                     size="small"
                                     InputLabelProps={{ shrink: true }}
+                                    helperText="Diário: este dia · Semanal: semana deste dia · Mensal: mês deste dia"
                                 />
                             </Box>
                             <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3,1fr)" }, gap: 3 }}>

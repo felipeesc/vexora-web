@@ -8,24 +8,40 @@ import {
     DialogContent,
     DialogActions,
     TextField,
-    MenuItem,
     Chip,
     Alert,
     CircularProgress,
     IconButton,
+    Divider,
+    Autocomplete,
+    InputAdornment,
+    Tooltip,
 } from "@mui/material";
 import {
     Add,
-    TableBar,
     CheckCircleOutline,
     Delete,
+    AddCircleOutline,
+    Visibility,
+    PointOfSale,
+    ShoppingCart,
+    AccessTime,
+    MonetizationOn,
+    TableRestaurant,
+    Search,
 } from "@mui/icons-material";
 import { useEffect, useState, useCallback } from "react";
 import { comandaService } from "../services/comandaService";
 import { produtoService } from "../services/produtoService";
 import { formatBRL } from "../utils/format";
-import { getErrorMessage } from "../utils/error";
 import type { ComandaResponse, ProdutoResponse } from "../types";
+
+interface CartItem {
+    produtoId: string;
+    nome: string;
+    precoVenda: number;
+    quantidade: number;
+}
 
 
 export default function Comandas() {
@@ -46,9 +62,12 @@ export default function Comandas() {
     const [mesa, setMesa] = useState<number | "">("");
     const [cliente, setCliente] = useState("");
     const [comandaAtiva, setComandaAtiva] = useState<ComandaResponse | null>(null);
-    const [produtoId, setProdutoId] = useState("");
-    const [quantidade, setQuantidade] = useState<number>(1);
     const [actionLoading, setActionLoading] = useState(false);
+
+    // Lançar múltiplos itens (carrinho)
+    const [itensLancar, setItensLancar] = useState<CartItem[]>([]);
+    const [novoProdutoId, setNovoProdutoId] = useState("");
+    const [novaQuantidade, setNovaQuantidade] = useState<number>(1);
 
     /* ===================== FETCH ===================== */
 
@@ -88,7 +107,8 @@ export default function Comandas() {
             String(c.mesa).includes(filtro)
     );
 
-    const produtoSelecionado = produtos.find((p) => p.id === produtoId);
+    const produtoSelecionado = produtos.find((p) => p.id === novoProdutoId);
+    const totalCarrinho = itensLancar.reduce((a, i) => a + i.precoVenda * i.quantidade, 0);
 
     /* ===================== HANDLERS ===================== */
 
@@ -108,21 +128,55 @@ export default function Comandas() {
         }
     };
 
-    const handleAdicionarItem = async () => {
-        if (!comandaAtiva || !produtoId || quantidade < 1) return;
+    const handleAdicionarAoCarrinho = () => {
+        if (!produtoSelecionado || novaQuantidade < 1) return;
+
+        setItensLancar((prev) => {
+            const existente = prev.find((i) => i.produtoId === produtoSelecionado.id);
+            if (existente) {
+                return prev.map((i) =>
+                    i.produtoId === produtoSelecionado.id
+                        ? { ...i, quantidade: i.quantidade + novaQuantidade }
+                        : i
+                );
+            }
+            return [
+                ...prev,
+                {
+                    produtoId: produtoSelecionado.id,
+                    nome: produtoSelecionado.nome,
+                    precoVenda: produtoSelecionado.precoVenda,
+                    quantidade: novaQuantidade,
+                },
+            ];
+        });
+
+        setNovoProdutoId("");
+        setNovaQuantidade(1);
+    };
+
+    const handleRemoverDoCarrinho = (produtoId: string) => {
+        setItensLancar((prev) => prev.filter((i) => i.produtoId !== produtoId));
+    };
+
+    const handleEnviarItens = async () => {
+        if (!comandaAtiva || itensLancar.length === 0) return;
         try {
             setActionLoading(true);
-            await comandaService.adicionarItem({
-                comandaId: comandaAtiva.id,
-                produtoId,
-                quantidade,
-            });
+            for (const item of itensLancar) {
+                await comandaService.adicionarItem({
+                    comandaId: comandaAtiva.id,
+                    produtoId: item.produtoId,
+                    quantidade: item.quantidade,
+                });
+            }
             setOpenLancar(false);
-            setProdutoId("");
-            setQuantidade(1);
+            setItensLancar([]);
+            setNovoProdutoId("");
+            setNovaQuantidade(1);
             await fetchComandas();
         } catch (err: any) {
-            setError(err?.response?.data?.message || "Erro ao lançar item");
+            setError(err?.response?.data?.message || "Erro ao lançar itens");
         } finally {
             setActionLoading(false);
         }
@@ -193,37 +247,59 @@ export default function Comandas() {
                 sx={{
                     display: "grid",
                     gridTemplateColumns: { xs: "1fr", sm: "repeat(2,1fr)" },
-                    gap: 3,
-                    mb: 4,
+                    gap: 2,
+                    mb: 3,
                 }}
             >
-                <Paper sx={{ p: 3 }}>
-                    <Typography variant="caption" color="text.secondary">TOTAL EM ABERTO</Typography>
-                    <Typography variant="h5" fontWeight={900} color="error.main">
-                        {formatBRL(totalAberto)}
-                    </Typography>
+                <Paper sx={{ p: 2.5, display: "flex", alignItems: "center", gap: 2 }}>
+                    <Box sx={{ bgcolor: "error.main", borderRadius: 2, p: 1, display: "flex" }}>
+                        <MonetizationOn sx={{ color: "white" }} />
+                    </Box>
+                    <Box>
+                        <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                            TOTAL EM ABERTO
+                        </Typography>
+                        <Typography variant="h6" fontWeight={800} color="error.main">
+                            {formatBRL(totalAberto)}
+                        </Typography>
+                    </Box>
                 </Paper>
-                <Paper sx={{ p: 3 }}>
-                    <Typography variant="caption" color="text.secondary">MESAS OCUPADAS</Typography>
-                    <Typography variant="h5" fontWeight={900} color="warning.main">
-                        {mesasOcupadas}
-                    </Typography>
+                <Paper sx={{ p: 2.5, display: "flex", alignItems: "center", gap: 2 }}>
+                    <Box sx={{ bgcolor: "warning.main", borderRadius: 2, p: 1, display: "flex" }}>
+                        <TableRestaurant sx={{ color: "white" }} />
+                    </Box>
+                    <Box>
+                        <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                            MESAS OCUPADAS
+                        </Typography>
+                        <Typography variant="h6" fontWeight={800} color="warning.main">
+                            {mesasOcupadas}
+                        </Typography>
+                    </Box>
                 </Paper>
             </Box>
 
             {/* FILTRO + NOVA COMANDA */}
-            <Box sx={{ display: "flex", gap: 2, mb: 4, flexWrap: "wrap" }}>
+            <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
                 <TextField
                     placeholder="Filtrar por cliente ou mesa..."
                     value={filtro}
                     onChange={(e) => setFiltro(e.target.value)}
                     size="small"
                     sx={{ flex: 1, minWidth: 220 }}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <Search fontSize="small" color="action" />
+                            </InputAdornment>
+                        ),
+                    }}
                 />
                 <Button
                     variant="contained"
                     startIcon={<Add />}
                     onClick={() => setOpenNova(true)}
+                    sx={{ textTransform: "none", fontWeight: 600, px: 3 }}
                 >
                     Nova Comanda
                 </Button>
@@ -233,66 +309,131 @@ export default function Comandas() {
             <Box
                 sx={{
                     display: "grid",
-                    gridTemplateColumns: { xs: "1fr", md: "repeat(3,1fr)" },
-                    gap: 3,
+                    gridTemplateColumns: { xs: "1fr", sm: "repeat(2,1fr)", lg: "repeat(3,1fr)" },
+                    gap: 2.5,
                 }}
             >
                 {filtradas.map((c) => (
-                    <Paper key={c.id} sx={{ p: 2.5, borderRadius: 3 }}>
-                        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                            <TableBar color="primary" />
-                            <Box sx={{ flex: 1 }}>
-                                <Typography fontWeight={700}>
-                                    {c.cliente || "Sem cliente"}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
+                    <Paper
+                        key={c.id}
+                        elevation={0}
+                        sx={{
+                            borderRadius: 3,
+                            overflow: "hidden",
+                            border: "1px solid",
+                            borderColor: "divider",
+                            transition: "all 0.2s",
+                            "&:hover": { boxShadow: 4, borderColor: "primary.main" },
+                        }}
+                    >
+                        {/* Header */}
+                        <Box
+                            sx={{
+                                bgcolor: "primary.dark",
+                                color: "white",
+                                px: 2,
+                                py: 1.2,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                            }}
+                        >
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
+                                <PointOfSale sx={{ fontSize: 18 }} />
+                                <Typography fontWeight={700} fontSize={14}>
                                     Mesa {c.mesa}
                                 </Typography>
                             </Box>
                             <Chip
-                                label={`${c.itens.length} itens`}
+                                icon={<AccessTime sx={{ fontSize: 13, color: "inherit !important" }} />}
+                                label={c.abertura
+                                    ? new Date(c.abertura).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+                                    : "Aberta"
+                                }
                                 size="small"
-                                color="primary"
-                                variant="outlined"
+                                sx={{
+                                    bgcolor: "rgba(255,255,255,0.15)",
+                                    color: "white",
+                                    fontWeight: 600,
+                                    fontSize: 11,
+                                    height: 22,
+                                }}
                             />
                         </Box>
 
-                        <Typography fontWeight={700} color="error.main" sx={{ mt: 1, fontSize: 18 }}>
-                            {formatBRL(c.total)}
-                        </Typography>
+                        {/* Body */}
+                        <Box sx={{ p: 2 }}>
+                            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+                                <Typography fontWeight={600} fontSize={13} color="text.secondary" noWrap sx={{ maxWidth: 150 }}>
+                                    {c.cliente || "Sem cliente"}
+                                </Typography>
+                                <Chip
+                                    icon={<ShoppingCart sx={{ fontSize: 13 }} />}
+                                    label={`${c.itens.length} ${c.itens.length === 1 ? "item" : "itens"}`}
+                                    size="small"
+                                    variant="outlined"
+                                    sx={{ height: 24, fontSize: 11, fontWeight: 600 }}
+                                />
+                            </Box>
 
-                        <Box sx={{ display: "flex", gap: 1, mt: 2, flexWrap: "wrap" }}>
-                            <Button
-                                variant="outlined"
-                                size="small"
-                                onClick={() => handleVerDetalhes(c)}
-                            >
-                                Detalhes
-                            </Button>
-                            <Button
-                                variant="contained"
-                                size="small"
-                                onClick={() => {
-                                    setComandaAtiva(c);
-                                    setProdutoId("");
-                                    setQuantidade(1);
-                                    setOpenLancar(true);
-                                }}
-                            >
-                                Lançar
-                            </Button>
-                            <Button
-                                variant="contained"
-                                color="success"
-                                size="small"
-                                startIcon={<CheckCircleOutline />}
-                                onClick={() => {
-                                    setComandaAtiva(c);
-                                    setOpenFechar(true);
-                                }}
-                            >
-                                Fechar
-                            </Button>
+                            <Typography fontWeight={800} fontSize={24} color="error.main" sx={{ mb: 1.5 }}>
+                                {formatBRL(c.total)}
+                            </Typography>
+
+                            {/* Ações */}
+                            <Box sx={{ display: "flex", gap: 0.8 }}>
+                                <Tooltip title="Ver detalhes">
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        onClick={() => handleVerDetalhes(c)}
+                                        sx={{
+                                            flex: 1,
+                                            textTransform: "none",
+                                            fontWeight: 600,
+                                            fontSize: 12,
+                                            borderColor: "divider",
+                                            color: "text.secondary",
+                                            "&:hover": { borderColor: "primary.main", color: "primary.main" },
+                                        }}
+                                    >
+                                        <Visibility sx={{ fontSize: 16, mr: 0.5 }} />
+                                        Detalhes
+                                    </Button>
+                                </Tooltip>
+                                <Tooltip title="Lançar consumo">
+                                    <Button
+                                        variant="contained"
+                                        size="small"
+                                        onClick={() => {
+                                            setComandaAtiva(c);
+                                            setItensLancar([]);
+                                            setNovoProdutoId("");
+                                            setNovaQuantidade(1);
+                                            setOpenLancar(true);
+                                        }}
+                                        sx={{ flex: 1, textTransform: "none", fontWeight: 600, fontSize: 12 }}
+                                    >
+                                        <Add sx={{ fontSize: 16, mr: 0.5 }} />
+                                        Lançar
+                                    </Button>
+                                </Tooltip>
+                                <Tooltip title="Fechar comanda">
+                                    <Button
+                                        variant="contained"
+                                        color="success"
+                                        size="small"
+                                        onClick={() => {
+                                            setComandaAtiva(c);
+                                            setOpenFechar(true);
+                                        }}
+                                        sx={{ flex: 1, textTransform: "none", fontWeight: 600, fontSize: 12 }}
+                                    >
+                                        <CheckCircleOutline sx={{ fontSize: 16, mr: 0.5 }} />
+                                        Fechar
+                                    </Button>
+                                </Tooltip>
+                            </Box>
                         </Box>
                     </Paper>
                 ))}
@@ -333,48 +474,95 @@ export default function Comandas() {
                 </DialogActions>
             </Dialog>
 
-            {/* MODAL LANÇAR */}
-            <Dialog open={openLancar} onClose={() => setOpenLancar(false)} fullWidth maxWidth="xs">
+            {/* MODAL LANÇAR — CARRINHO */}
+            <Dialog open={openLancar} onClose={() => setOpenLancar(false)} fullWidth maxWidth="sm">
                 <DialogTitle>Lançar Consumo — Mesa {comandaAtiva?.mesa}</DialogTitle>
                 <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: "16px !important" }}>
-                    <TextField
-                        select
-                        label="Produto"
-                        value={produtoId}
-                        onChange={(e) => setProdutoId(e.target.value)}
-                        fullWidth
-                    >
-                        {produtos.map((p) => (
-                            <MenuItem key={p.id} value={p.id}>
-                                {p.nome} — {formatBRL(p.precoVenda)}
-                            </MenuItem>
-                        ))}
-                    </TextField>
-                    <TextField
-                        type="number"
-                        label="Quantidade"
-                        value={quantidade}
-                        onChange={(e) => setQuantidade(Number(e.target.value))}
-                        inputProps={{ min: 1 }}
-                        fullWidth
-                    />
-                    {produtoSelecionado && (
-                        <Paper sx={{ p: 2, bgcolor: "background.default" }}>
-                            <Typography variant="caption" color="text.secondary">TOTAL DO LANÇAMENTO</Typography>
-                            <Typography fontWeight={700} fontSize={18}>
-                                {formatBRL(produtoSelecionado.precoVenda * quantidade)}
+
+                    {/* Adicionar item ao carrinho */}
+                    <Box sx={{ display: "flex", gap: 1, alignItems: "flex-end" }}>
+                        <Autocomplete
+                            options={produtos}
+                            getOptionLabel={(p) => `${p.nome} — ${formatBRL(p.precoVenda)}`}
+                            value={produtos.find((p) => p.id === novoProdutoId) || null}
+                            onChange={(_, selected) => setNovoProdutoId(selected?.id || "")}
+                            renderInput={(params) => (
+                                <TextField {...params} label="Buscar produto" size="small" />
+                            )}
+                            isOptionEqualToValue={(opt, val) => opt.id === val.id}
+                            noOptionsText="Nenhum produto encontrado"
+                            sx={{ flex: 2 }}
+                        />
+                        <TextField
+                            type="number"
+                            label="Qtd"
+                            value={novaQuantidade}
+                            onChange={(e) => setNovaQuantidade(Number(e.target.value))}
+                            inputProps={{ min: 1 }}
+                            sx={{ width: 80 }}
+                            size="small"
+                        />
+                        <IconButton
+                            color="primary"
+                            onClick={handleAdicionarAoCarrinho}
+                            disabled={!novoProdutoId || novaQuantidade < 1}
+                        >
+                            <AddCircleOutline />
+                        </IconButton>
+                    </Box>
+
+                    {/* Lista do carrinho */}
+                    {itensLancar.length > 0 && (
+                        <>
+                            <Divider />
+                            <Typography variant="subtitle2" color="text.secondary">
+                                Itens a lançar ({itensLancar.length})
                             </Typography>
-                        </Paper>
+                            {itensLancar.map((item) => (
+                                <Paper
+                                    key={item.produtoId}
+                                    variant="outlined"
+                                    sx={{ p: 1.5, display: "flex", alignItems: "center", gap: 1 }}
+                                >
+                                    <Box sx={{ flex: 1 }}>
+                                        <Typography fontWeight={600} fontSize={14}>
+                                            {item.nome}
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                            {item.quantidade}x {formatBRL(item.precoVenda)}
+                                        </Typography>
+                                    </Box>
+                                    <Typography fontWeight={700} fontSize={14}>
+                                        {formatBRL(item.precoVenda * item.quantidade)}
+                                    </Typography>
+                                    <IconButton
+                                        size="small"
+                                        color="error"
+                                        onClick={() => handleRemoverDoCarrinho(item.produtoId)}
+                                    >
+                                        <Delete fontSize="small" />
+                                    </IconButton>
+                                </Paper>
+                            ))}
+                            <Paper sx={{ p: 2, bgcolor: "background.default" }}>
+                                <Typography variant="caption" color="text.secondary">
+                                    TOTAL DO LANÇAMENTO
+                                </Typography>
+                                <Typography fontWeight={700} fontSize={18}>
+                                    {formatBRL(totalCarrinho)}
+                                </Typography>
+                            </Paper>
+                        </>
                     )}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setOpenLancar(false)}>Cancelar</Button>
                     <Button
                         variant="contained"
-                        onClick={handleAdicionarItem}
-                        disabled={!produtoId || quantidade < 1 || actionLoading}
+                        onClick={handleEnviarItens}
+                        disabled={itensLancar.length === 0 || actionLoading}
                     >
-                        {actionLoading ? "Lançando..." : "Confirmar"}
+                        {actionLoading ? "Lançando..." : `Confirmar (${itensLancar.length} itens)`}
                     </Button>
                 </DialogActions>
             </Dialog>

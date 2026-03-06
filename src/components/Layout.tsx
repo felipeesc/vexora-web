@@ -7,12 +7,9 @@ import {
     ListItemButton,
     ListItemIcon,
     ListItemText,
-    Toolbar,
-    Typography,
     IconButton,
     AppBar,
-    Avatar,
-    Divider,
+    Toolbar,
     useMediaQuery,
     useTheme,
 } from "@mui/material";
@@ -24,14 +21,16 @@ import {
     Warehouse as WarehouseIcon,
     SwapVert as SwapVertIcon,
     Logout as LogoutIcon,
+    History as HistoryIcon,
 } from "@mui/icons-material";
 import { useAuth } from "../auth/AuthContext";
-import logo from "../assets/vexora-logo.png";
+import logoBranca from "../assets/vexora-logo.png";
 
-const DRAWER_WIDTH = 260;
+const DRAWER_WIDTH = 250;
 
 const menuItems = [
     { label: "Comandas", path: "/", icon: <ReceiptIcon /> },
+    { label: "Histórico", path: "/historico", icon: <HistoryIcon /> },
     { label: "Produtos", path: "/produtos", icon: <InventoryIcon /> },
     { label: "Estoque", path: "/estoque", icon: <WarehouseIcon /> },
     { label: "Movimentações", path: "/movimentacoes", icon: <SwapVertIcon /> },
@@ -52,44 +51,108 @@ export default function Layout() {
     };
 
     const drawerContent = (
-        <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-            <Toolbar sx={{ justifyContent: "center", py: 2 }}>
-                <Box component="img" src={logo} alt="Vexora" sx={{ width: 120 }} />
-            </Toolbar>
-            <Divider />
-            <List sx={{ flex: 1, pt: 1 }}>
-                {menuItems.map((item) => (
-                    <ListItemButton
-                        key={item.path}
-                        selected={location.pathname === item.path}
-                        onClick={() => {
-                            navigate(item.path);
-                            if (isMobile) setMobileOpen(false);
-                        }}
-                        sx={{
-                            mx: 1,
-                            borderRadius: 2,
-                            mb: 0.5,
-                            "&.Mui-selected": {
-                                bgcolor: "primary.main",
-                                color: "white",
-                                "& .MuiListItemIcon-root": { color: "white" },
-                                "&:hover": { bgcolor: "primary.dark" },
-                            },
-                        }}
-                    >
-                        <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
-                        <ListItemText primary={item.label} />
-                    </ListItemButton>
-                ))}
+        <Box
+            sx={{
+                display: "flex",
+                flexDirection: "column",
+                height: "100%",
+                background: `linear-gradient(180deg, ${theme.palette.primary.dark} 0%, #0a2e6e 100%)`,
+                color: "white",
+            }}
+        >
+            {/* Logo */}
+            <Box
+                sx={{
+                    pt: 4,
+                    pb: 3,
+                    px: 3,
+                    display: "flex",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                }}
+                onClick={() => navigate("/")}
+            >
+                <Box
+                    component="img"
+                    src={logoBranca}
+                    alt="Vexora"
+                    sx={{ width: 140 }}
+                />
+            </Box>
+
+            {/* Separador sutil */}
+            <Box sx={{ mx: 3, mb: 2, borderBottom: "1px solid rgba(255,255,255,0.12)" }} />
+
+            {/* Navegação */}
+            <List sx={{ flex: 1, px: 1.5 }}>
+                {menuItems.map((item) => {
+                    const isActive = location.pathname === item.path;
+                    return (
+                        <ListItemButton
+                            key={item.path}
+                            selected={isActive}
+                            onClick={() => {
+                                navigate(item.path);
+                                if (isMobile) setMobileOpen(false);
+                            }}
+                            sx={{
+                                borderRadius: 2,
+                                mb: 0.5,
+                                py: 1.1,
+                                color: "rgba(255,255,255,0.7)",
+                                "&.Mui-selected": {
+                                    bgcolor: "rgba(255,255,255,0.15)",
+                                    color: "white",
+                                    "& .MuiListItemIcon-root": { color: "white" },
+                                    "&:hover": { bgcolor: "rgba(255,255,255,0.2)" },
+                                },
+                                "&:not(.Mui-selected):hover": {
+                                    bgcolor: "rgba(255,255,255,0.08)",
+                                    color: "white",
+                                },
+                                "& .MuiListItemIcon-root": {
+                                    color: "rgba(255,255,255,0.5)",
+                                },
+                            }}
+                        >
+                            <ListItemIcon sx={{ minWidth: 38 }}>{item.icon}</ListItemIcon>
+                            <ListItemText
+                                primary={item.label}
+                                primaryTypographyProps={{
+                                    fontWeight: isActive ? 700 : 400,
+                                    fontSize: 14,
+                                }}
+                            />
+                        </ListItemButton>
+                    );
+                })}
             </List>
-            <Divider />
-            <List>
-                <ListItemButton onClick={handleLogout} sx={{ mx: 1, borderRadius: 2 }}>
-                    <ListItemIcon sx={{ minWidth: 40 }}>
-                        <LogoutIcon color="error" />
+
+            {/* Separador */}
+            <Box sx={{ mx: 3, borderBottom: "1px solid rgba(255,255,255,0.12)" }} />
+
+            {/* Logout */}
+            <List sx={{ px: 1.5, py: 1.5 }}>
+                <ListItemButton
+                    onClick={handleLogout}
+                    sx={{
+                        borderRadius: 2,
+                        py: 1.1,
+                        color: "rgba(255,255,255,0.6)",
+                        "&:hover": {
+                            bgcolor: "rgba(255,80,80,0.15)",
+                            color: "#ff8a80",
+                            "& .MuiListItemIcon-root": { color: "#ff8a80" },
+                        },
+                    }}
+                >
+                    <ListItemIcon sx={{ minWidth: 38, color: "rgba(255,255,255,0.4)" }}>
+                        <LogoutIcon />
                     </ListItemIcon>
-                    <ListItemText primary="Sair" sx={{ "& .MuiTypography-root": { color: "error.main" } }} />
+                    <ListItemText
+                        primary="Sair"
+                        primaryTypographyProps={{ fontWeight: 500, fontSize: 14 }}
+                    />
                 </ListItemButton>
             </List>
         </Box>
@@ -99,17 +162,19 @@ export default function Layout() {
         <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default" }}>
             {/* AppBar mobile */}
             {isMobile && (
-                <AppBar position="fixed" sx={{ zIndex: theme.zIndex.drawer + 1 }}>
+                <AppBar
+                    position="fixed"
+                    elevation={0}
+                    sx={{
+                        zIndex: theme.zIndex.drawer + 1,
+                        bgcolor: theme.palette.primary.dark,
+                    }}
+                >
                     <Toolbar>
-                        <IconButton color="inherit" edge="start" onClick={() => setMobileOpen(!mobileOpen)}>
+                        <IconButton color="inherit" edge="start" onClick={() => setMobileOpen(!mobileOpen)} sx={{ mr: 1 }}>
                             <MenuIcon />
                         </IconButton>
-                        <Typography variant="h6" noWrap sx={{ flex: 1 }}>
-                            Vexora
-                        </Typography>
-                        <Avatar sx={{ width: 32, height: 32, bgcolor: "white", color: "primary.main", fontSize: 14 }}>
-                            V
-                        </Avatar>
+                        <Box component="img" src={logoBranca} alt="Vexora" sx={{ height: 26 }} />
                     </Toolbar>
                 </AppBar>
             )}
@@ -125,6 +190,7 @@ export default function Layout() {
                     "& .MuiDrawer-paper": {
                         width: DRAWER_WIDTH,
                         boxSizing: "border-box",
+                        border: "none",
                     },
                 }}
             >

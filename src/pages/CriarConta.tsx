@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { authService } from "../services/authService";
 import { Role } from "../types";
 import vexoraLogo from "../assets/vexora-logo.png";
+import { authPageContainer } from "../theme/authStyles";
 
 export default function CriarConta() {
     const navigate = useNavigate();

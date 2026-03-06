@@ -11,6 +11,7 @@ import { relatorioService } from "../services/relatorioService";
 import { produtoService } from "../services/produtoService";
 import { TipoMovimentacao } from "../types";
 import type { MovimentacaoResponse, ProdutoResponse, MovimentacaoRequest } from "../types";
+import { formatDateTime } from "../utils/format";
 
 export default function Movimentacoes() {
     const [movimentacoes, setMovimentacoes] = useState<MovimentacaoResponse[]>([]);
@@ -114,12 +115,13 @@ export default function Movimentacoes() {
                                 <TableCell align="center"><strong>Tipo</strong></TableCell>
                                 <TableCell align="right"><strong>Quantidade</strong></TableCell>
                                 <TableCell><strong>Motivo</strong></TableCell>
+                                <TableCell><strong>Usuário</strong></TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {movimentacoes.map((m) => (
                                 <TableRow key={m.id}>
-                                    <TableCell>{m.dataHora}</TableCell>
+                                    <TableCell>{formatDateTime(m.dataHora)}</TableCell>
                                     <TableCell>{m.produtoNome}</TableCell>
                                     <TableCell align="center">
                                         <Chip
@@ -131,11 +133,12 @@ export default function Movimentacoes() {
                                     </TableCell>
                                     <TableCell align="right">{m.quantidade}</TableCell>
                                     <TableCell>{m.motivo || "—"}</TableCell>
+                                    <TableCell>{m.usuario || "—"}</TableCell>
                                 </TableRow>
                             ))}
                             {movimentacoes.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                                    <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                                         <Typography color="text.secondary">Nenhuma movimentação no período.</Typography>
                                     </TableCell>
                                 </TableRow>

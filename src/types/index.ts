@@ -1,5 +1,6 @@
 /* ==================== ENUMS ==================== */
 
+// @ts-ignore
 export enum CategoriaProduto {
     CERVEJA = "CERVEJA",
     REFRIGERANTE = "REFRIGERANTE",
@@ -13,6 +14,7 @@ export enum CategoriaProduto {
     OUTROS = "OUTROS",
 }
 
+// @ts-ignore
 export enum UnidadeMedida {
     UNIDADE = "UNIDADE",
     LATA = "LATA",
@@ -22,11 +24,13 @@ export enum UnidadeMedida {
     PACOTE = "PACOTE",
 }
 
+// @ts-ignore
 export enum TipoMovimentacao {
     ENTRADA = "ENTRADA",
     SAIDA = "SAIDA",
 }
 
+// @ts-ignore
 export enum Role {
     ROLE_ADMIN = "ROLE_ADMIN",
     ROLE_USER = "ROLE_USER",
@@ -123,6 +127,7 @@ export interface MovimentacaoResponse {
     tipo: TipoMovimentacao;
     quantidade: number;
     motivo: string | null;
+    usuario: string | null;
     dataHora: string;
 }
 

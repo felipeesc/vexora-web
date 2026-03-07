@@ -3,5 +3,5 @@ import type { MovimentacaoRequest, MovimentacaoResponse } from "../types";
 
 export const movimentacaoService = {
     registrar: (data: MovimentacaoRequest) =>
-        api.post<MovimentacaoResponse>("/movimentacoes", data),
+        api.post<MovimentacaoResponse>("/api/movimentacoes", data),
 };

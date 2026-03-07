@@ -8,28 +8,28 @@ import type {
 
 export const relatorioService = {
     faturamentoDiario: (data?: string) =>
-        api.get<FaturamentoDTO>("/relatorios/faturamento/diario", { params: { data } }),
+        api.get<FaturamentoDTO>("/api/relatorios/faturamento/diario", { params: { data } }),
 
     faturamentoSemanal: (data?: string) =>
-        api.get<FaturamentoDTO>("/relatorios/faturamento/semanal", { params: { data } }),
+        api.get<FaturamentoDTO>("/api/relatorios/faturamento/semanal", { params: { data } }),
 
     faturamentoMensal: (data?: string) =>
-        api.get<FaturamentoDTO>("/relatorios/faturamento/mensal", { params: { data } }),
+        api.get<FaturamentoDTO>("/api/relatorios/faturamento/mensal", { params: { data } }),
 
     produtosMaisVendidosDia: (data?: string) =>
-        api.get<ProdutoMaisVendidoDTO[]>("/relatorios/produtos/mais-vendidos/dia", { params: { data } }),
+        api.get<ProdutoMaisVendidoDTO[]>("/api/relatorios/produtos/mais-vendidos/dia", { params: { data } }),
 
     produtosMaisVendidosSemana: (data?: string) =>
-        api.get<ProdutoMaisVendidoDTO[]>("/relatorios/produtos/mais-vendidos/semana", { params: { data } }),
+        api.get<ProdutoMaisVendidoDTO[]>("/api/relatorios/produtos/mais-vendidos/semana", { params: { data } }),
 
     produtosMaisVendidosMes: (data?: string) =>
-        api.get<ProdutoMaisVendidoDTO[]>("/relatorios/produtos/mais-vendidos/mes", { params: { data } }),
+        api.get<ProdutoMaisVendidoDTO[]>("/api/relatorios/produtos/mais-vendidos/mes", { params: { data } }),
 
     relatorioEstoque: () =>
-        api.get<RelatorioEstoqueDTO>("/relatorios/estoque"),
+        api.get<RelatorioEstoqueDTO>("/api/relatorios/estoque"),
 
     historicoMovimentacoes: (inicio: string, fim: string) =>
-        api.get<MovimentacaoResponse[]>("/relatorios/estoque/movimentacoes", {
+        api.get<MovimentacaoResponse[]>("/api/relatorios/estoque/movimentacoes", {
             params: { inicio, fim },
         }),
 };

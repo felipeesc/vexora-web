@@ -1,23 +1,32 @@
 import {
-    Box, Typography, Paper, TextField, Button, Dialog, DialogTitle,
+    Box, Typography, Paper, TextField, Button, Dialog,
     DialogContent, DialogActions, Chip, Alert, CircularProgress,
     Table, TableHead, TableBody, TableRow, TableCell, TableContainer,
-    InputAdornment, IconButton, Divider,
+    InputAdornment, IconButton, Divider, Tooltip,
 } from "@mui/material";
 import {
-    Search, Visibility, Receipt, AccessTime, CheckCircle, Delete,
-    CalendarMonth, TableRestaurant,
+    Search, Visibility, Receipt, AccessTime, CheckCircle,
+    CalendarMonth, TableRestaurant, Replay,
 } from "@mui/icons-material";
 import { useEffect, useState, useCallback } from "react";
+import { useSnackbar } from "notistack";
 import dayjs from "dayjs";
 import { comandaService } from "../services/comandaService";
+import { useAuth } from "../auth/AuthContext";
+import { useUser } from "../auth/UserContext";
 import { formatBRL, formatDateTime, formatTime } from "../utils/format";
+import { Role } from "../types";
 import type { ComandaResponse } from "../types";
 
 export default function Historico() {
     const [comandas, setComandas] = useState<ComandaResponse[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const { isAdmin } = useAuth();
+    const { hasAnyRole } = useUser();
+    const { enqueueSnackbar } = useSnackbar();
+
+    const canViewTotalFaturado = hasAnyRole([Role.ADMIN, Role.GERENTE]);
 
     // Filtros
     const [filtroTexto, setFiltroTexto] = useState("");
@@ -65,6 +74,19 @@ export default function Historico() {
         }
     };
 
+    const handleReabrir = async () => {
+        if (!comandaSelecionada) return;
+        try {
+            await comandaService.reabrir(comandaSelecionada.id);
+            enqueueSnackbar("Comanda reaberta com sucesso", { variant: "success" });
+            setOpenDetalhes(false);
+            setComandaSelecionada(null);
+            await fetchComandas();
+        } catch (err: any) {
+            enqueueSnackbar(err?.response?.data?.message || "Erro ao reabrir comanda", { variant: "error" });
+        }
+    };
+
     // Filtro local por texto (cliente)
     const filtradas = comandas.filter(
         (c) =>
@@ -100,7 +122,7 @@ export default function Historico() {
             )}
 
             {/* RESUMO */}
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2,1fr)" }, gap: 2, mb: 3 }}>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: canViewTotalFaturado ? "repeat(2,1fr)" : "1fr" }, gap: 2, mb: 3 }}>
                 <Paper sx={{ p: 2.5, display: "flex", alignItems: "center", gap: 2 }}>
                     <Box sx={{ bgcolor: "success.main", borderRadius: 2, p: 1, display: "flex" }}>
                         <Receipt sx={{ color: "white" }} />
@@ -114,19 +136,21 @@ export default function Historico() {
                         </Typography>
                     </Box>
                 </Paper>
-                <Paper sx={{ p: 2.5, display: "flex", alignItems: "center", gap: 2 }}>
-                    <Box sx={{ bgcolor: "primary.main", borderRadius: 2, p: 1, display: "flex" }}>
-                        <CheckCircle sx={{ color: "white" }} />
-                    </Box>
-                    <Box>
-                        <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                            TOTAL FATURADO
-                        </Typography>
-                        <Typography variant="h6" fontWeight={800} color="primary.main">
-                            {formatBRL(totalFaturado)}
-                        </Typography>
-                    </Box>
-                </Paper>
+                {canViewTotalFaturado && (
+                    <Paper sx={{ p: 2.5, display: "flex", alignItems: "center", gap: 2 }}>
+                        <Box sx={{ bgcolor: "primary.main", borderRadius: 2, p: 1, display: "flex" }}>
+                            <CheckCircle sx={{ color: "white" }} />
+                        </Box>
+                        <Box>
+                            <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                                TOTAL FATURADO
+                            </Typography>
+                            <Typography variant="h6" fontWeight={800} color="primary.main">
+                                {formatBRL(totalFaturado)}
+                            </Typography>
+                        </Box>
+                    </Paper>
+                )}
             </Box>
 
             {/* FILTROS */}
@@ -344,6 +368,7 @@ export default function Historico() {
                                             display: "flex",
                                             alignItems: "center",
                                             gap: 1.5,
+                                            opacity: item.cancelado ? 0.5 : 1,
                                         }}
                                     >
                                         {/* Número do item */}
@@ -352,7 +377,7 @@ export default function Historico() {
                                                 width: 28,
                                                 height: 28,
                                                 borderRadius: "50%",
-                                                bgcolor: "primary.main",
+                                                bgcolor: item.cancelado ? "error.main" : "primary.main",
                                                 color: "white",
                                                 display: "flex",
                                                 alignItems: "center",
@@ -367,7 +392,11 @@ export default function Historico() {
 
                                         {/* Info do produto */}
                                         <Box sx={{ flex: 1 }}>
-                                            <Typography fontWeight={600} fontSize={14}>
+                                            <Typography
+                                                fontWeight={600}
+                                                fontSize={14}
+                                                sx={{ textDecoration: item.cancelado ? "line-through" : "none" }}
+                                            >
                                                 {item.nome}
                                             </Typography>
                                             <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
@@ -382,11 +411,20 @@ export default function Historico() {
                                                     sx={{ height: 20, fontSize: 10, fontWeight: 600 }}
                                                 />
                                             </Box>
+                                            {item.cancelado && item.motivoCancelamento && (
+                                                <Typography variant="caption" color="error.main" display="block">
+                                                    Cancelado: {item.motivoCancelamento}
+                                                </Typography>
+                                            )}
                                         </Box>
 
                                         {/* Total do item */}
-                                        <Typography fontWeight={700} fontSize={14}>
-                                            {formatBRL(item.totalItem)}
+                                        <Typography
+                                            fontWeight={700}
+                                            fontSize={14}
+                                            sx={{ textDecoration: item.cancelado ? "line-through" : "none" }}
+                                        >
+                                            {formatBRL(item.cancelado ? 0 : item.totalItem)}
                                         </Typography>
                                     </Paper>
                                 ))
@@ -403,9 +441,39 @@ export default function Historico() {
                                     </Typography>
                                 </Box>
                             </Paper>
+
+                            {/* Pagamentos */}
+                            {comandaSelecionada.pagamentos && comandaSelecionada.pagamentos.length > 0 && (
+                                <Box sx={{ mt: 2 }}>
+                                    <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                                        FORMAS DE PAGAMENTO
+                                    </Typography>
+                                    {comandaSelecionada.pagamentos.map((pag) => (
+                                        <Box key={pag.id} sx={{ display: "flex", justifyContent: "space-between", py: 0.5 }}>
+                                            <Chip label={pag.metodo} size="small" variant="outlined" sx={{ fontWeight: 600 }} />
+                                            <Typography fontWeight={600} fontSize={14}>
+                                                {formatBRL(pag.valor)}
+                                            </Typography>
+                                        </Box>
+                                    ))}
+                                </Box>
+                            )}
                         </DialogContent>
 
                         <DialogActions sx={{ px: 3, pb: 2 }}>
+                            {isAdmin && !comandaSelecionada.aberta && (
+                                <Tooltip title="Reabrir esta comanda (somente gerente)">
+                                    <Button
+                                        variant="contained"
+                                        color="warning"
+                                        startIcon={<Replay />}
+                                        onClick={handleReabrir}
+                                        sx={{ textTransform: "none", fontWeight: 600, mr: "auto" }}
+                                    >
+                                        Reabrir Comanda
+                                    </Button>
+                                </Tooltip>
+                            )}
                             <Button onClick={() => setOpenDetalhes(false)} variant="outlined" sx={{ textTransform: "none" }}>
                                 Fechar
                             </Button>

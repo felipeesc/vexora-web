@@ -12,6 +12,8 @@ import {
     Toolbar,
     useMediaQuery,
     useTheme,
+    Typography,
+    Chip,
 } from "@mui/material";
 import {
     Menu as MenuIcon,
@@ -22,25 +24,59 @@ import {
     SwapVert as SwapVertIcon,
     Logout as LogoutIcon,
     History as HistoryIcon,
+    Category as CategoryIcon,
+    People as PeopleIcon,
 } from "@mui/icons-material";
 import { useAuth } from "../auth/AuthContext";
+import { useUser } from "../auth/UserContext";
+import { Role } from "../types";
 import logoBranca from "../assets/vexora-logo.png";
 
 const DRAWER_WIDTH = 250;
 
-const menuItems = [
+interface MenuItem {
+    label: string;
+    path: string;
+    icon: React.ReactElement;
+    roles?: string[];
+    children?: MenuItem[];
+}
+
+const menuItems: MenuItem[] = [
     { label: "Comandas", path: "/", icon: <ReceiptIcon /> },
     { label: "Histórico", path: "/historico", icon: <HistoryIcon /> },
     { label: "Produtos", path: "/produtos", icon: <InventoryIcon /> },
     { label: "Estoque", path: "/estoque", icon: <WarehouseIcon /> },
-    { label: "Movimentações", path: "/movimentacoes", icon: <SwapVertIcon /> },
-    { label: "Relatórios", path: "/relatorios", icon: <BarChartIcon /> },
+    {
+        label: "Movimentações",
+        path: "/movimentacoes",
+        icon: <SwapVertIcon />,
+        roles: [Role.ADMIN, Role.GERENTE]
+    },
+    {
+        label: "Relatórios",
+        path: "/relatorios",
+        icon: <BarChartIcon />,
+        roles: [Role.ADMIN, Role.GERENTE]
+    },
+    {
+        label: "Categorias",
+        path: "/categorias",
+        icon: <CategoryIcon />
+    },
+    {
+        label: "Usuários",
+        path: "/usuarios",
+        icon: <PeopleIcon />,
+        roles: [Role.ADMIN]
+    },
 ];
 
 export default function Layout() {
     const navigate = useNavigate();
     const location = useLocation();
     const { logout } = useAuth();
+    const { currentUser, hasAnyRole } = useUser();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -48,6 +84,11 @@ export default function Layout() {
     const handleLogout = () => {
         logout();
         navigate("/login");
+    };
+
+    const canAccessItem = (item: MenuItem): boolean => {
+        if (!item.roles) return true;
+        return hasAnyRole(item.roles);
     };
 
     const drawerContent = (
@@ -80,24 +121,48 @@ export default function Layout() {
                 />
             </Box>
 
+            {/* Informações do usuário */}
+            {currentUser && (
+                <Box sx={{ px: 3, pb: 2 }}>
+                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)' }}>
+                        Logado como:
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                        {currentUser.username}
+                    </Typography>
+                    <Chip
+                        label={currentUser.role}
+                        size="small"
+                        sx={{
+                            mt: 0.5,
+                            backgroundColor: 'rgba(255,255,255,0.2)',
+                            color: 'white',
+                            fontSize: '0.7rem'
+                        }}
+                    />
+                </Box>
+            )}
+
             {/* Separador sutil */}
             <Box sx={{ mx: 3, mb: 2, borderBottom: "1px solid rgba(255,255,255,0.12)" }} />
 
             {/* Navegação */}
             <List sx={{ flex: 1, px: 1.5 }}>
-                {menuItems.map((item) => {
-                    const isActive = location.pathname === item.path;
-                    return (
-                        <ListItemButton
-                            key={item.path}
-                            selected={isActive}
-                            onClick={() => {
-                                navigate(item.path);
-                                if (isMobile) setMobileOpen(false);
-                            }}
-                            sx={{
-                                borderRadius: 2,
-                                mb: 0.5,
+                {menuItems
+                    .filter(canAccessItem)
+                    .map((item) => {
+                        const isActive = location.pathname === item.path;
+                        return (
+                            <ListItemButton
+                                key={item.path}
+                                selected={isActive}
+                                onClick={() => {
+                                    navigate(item.path);
+                                    if (isMobile) setMobileOpen(false);
+                                }}
+                                sx={{
+                                    borderRadius: 2,
+                                    mb: 0.5,
                                 py: 1.1,
                                 color: "rgba(255,255,255,0.7)",
                                 "&.Mui-selected": {

@@ -1,6 +1,8 @@
+// Arquivo de tipos para o sistema Vexora
+// Todas as interfaces e enums estão exportados explicitamente
+
 /* ==================== ENUMS ==================== */
 
-// @ts-ignore
 export enum CategoriaProduto {
     CERVEJA = "CERVEJA",
     REFRIGERANTE = "REFRIGERANTE",
@@ -14,7 +16,6 @@ export enum CategoriaProduto {
     OUTROS = "OUTROS",
 }
 
-// @ts-ignore
 export enum UnidadeMedida {
     UNIDADE = "UNIDADE",
     LATA = "LATA",
@@ -24,19 +25,25 @@ export enum UnidadeMedida {
     PACOTE = "PACOTE",
 }
 
-// @ts-ignore
 export enum TipoMovimentacao {
     ENTRADA = "ENTRADA",
     SAIDA = "SAIDA",
 }
 
-// @ts-ignore
 export enum Role {
-    ROLE_ADMIN = "ROLE_ADMIN",
-    ROLE_USER = "ROLE_USER",
+    ADMIN = "ADMIN",
+    GERENTE = "GERENTE",
+    FUNCIONARIO = "FUNCIONARIO",
 }
 
-/* ==================== AUTH ==================== */
+export enum MetodoPagamento {
+    DINHEIRO = "DINHEIRO",
+    DEBITO = "DEBITO",
+    CREDITO = "CREDITO",
+    PIX = "PIX",
+}
+
+/* ==================== INTERFACES DE AUTENTICAÇÃO ==================== */
 
 export interface LoginRequest {
     username: string;
@@ -45,6 +52,28 @@ export interface LoginRequest {
 
 export interface LoginResponse {
     token: string;
+    role?: string;
+    username?: string;
+}
+
+export interface CurrentUserResponse {
+    id: string;
+    username: string;
+    role: Role;
+    enabled: boolean;
+}
+
+export interface UserResponse {
+    id: string;
+    username: string;
+    role: Role;
+    enabled: boolean;
+}
+
+export interface CreateUserRequest {
+    username: string;
+    password: string;
+    role: Role;
 }
 
 export interface SignupRequest {
@@ -53,11 +82,26 @@ export interface SignupRequest {
     role?: Role;
 }
 
-/* ==================== PRODUTO ==================== */
+/* ==================== INTERFACES DE CATEGORIA ==================== */
+
+export interface CategoriaRequest {
+    nome: string;
+    descricao?: string;
+}
+
+export interface CategoriaResponse {
+    id: string;
+    nome: string;
+    descricao?: string;
+    ativa: boolean;
+    criadoEm: string;
+}
+
+/* ==================== INTERFACES DE PRODUTO ==================== */
 
 export interface ProdutoRequest {
     nome: string;
-    categoria: CategoriaProduto;
+    categoriaId: string;
     unidade: UnidadeMedida;
     precoCompra: number;
     precoVenda: number;
@@ -68,7 +112,7 @@ export interface ProdutoRequest {
 export interface ProdutoResponse {
     id: string;
     nome: string;
-    categoria: CategoriaProduto;
+    categoria: CategoriaResponse;
     unidade: UnidadeMedida;
     precoCompra: number;
     precoVenda: number;
@@ -76,7 +120,7 @@ export interface ProdutoResponse {
     estoqueMinimo: number;
 }
 
-/* ==================== COMANDA ==================== */
+/* ==================== INTERFACES DE COMANDA ==================== */
 
 export interface ComandaRequest {
     mesa: number;
@@ -99,6 +143,19 @@ export interface ComandaItemDTO {
     dataHora: string;
     precoUnitario: number;
     totalItem: number;
+    cancelado: boolean;
+    motivoCancelamento: string | null;
+}
+
+export interface PagamentoDTO {
+    metodo: MetodoPagamento;
+    valor: number;
+}
+
+export interface PagamentoResponse {
+    id: number;
+    metodo: MetodoPagamento;
+    valor: number;
 }
 
 export interface ComandaResponse {
@@ -110,9 +167,10 @@ export interface ComandaResponse {
     fechamento: string | null;
     itens: ComandaItemDTO[];
     total: number;
+    pagamentos: PagamentoResponse[];
 }
 
-/* ==================== MOVIMENTAÇÃO ==================== */
+/* ==================== INTERFACES DE MOVIMENTAÇÃO ==================== */
 
 export interface MovimentacaoRequest {
     produtoId: string;
@@ -131,7 +189,7 @@ export interface MovimentacaoResponse {
     dataHora: string;
 }
 
-/* ==================== RELATÓRIOS ==================== */
+/* ==================== INTERFACES DE RELATÓRIOS ==================== */
 
 export interface FaturamentoDTO {
     faturamentoBruto: number;
@@ -147,7 +205,7 @@ export interface ProdutoMaisVendidoDTO {
 export interface EstoqueProdutoDTO {
     id: string;
     nome: string;
-    categoria: CategoriaProduto;
+    categoria: CategoriaResponse;
     unidade: UnidadeMedida;
     estoqueAtual: number;
     estoqueMinimo: number;

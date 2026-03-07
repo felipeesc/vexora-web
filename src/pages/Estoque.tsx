@@ -84,7 +84,7 @@ export default function Estoque() {
                                 sx={p.abaixoDoMinimo ? { bgcolor: (t) => `${t.palette.error.main}10` } : {}}
                             >
                                 <TableCell>{p.nome}</TableCell>
-                                <TableCell><Chip label={p.categoria} size="small" /></TableCell>
+                                <TableCell><Chip label={p.categoria?.nome ?? "—"} size="small" /></TableCell>
                                 <TableCell>{p.unidade}</TableCell>
                                 <TableCell align="right">
                                     <Typography fontWeight={600} color={p.abaixoDoMinimo ? "error.main" : "inherit"}>

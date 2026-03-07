@@ -6,14 +6,15 @@ import {
 import { Add, Edit, Delete } from "@mui/icons-material";
 import { useEffect, useState, useCallback } from "react";
 import { produtoService } from "../services/produtoService";
+import { categoriaService } from "../services/categoriaService";
 import { formatBRL } from "../utils/format";
-import { CategoriaProduto, UnidadeMedida } from "../types";
-import type { ProdutoResponse, ProdutoRequest } from "../types";
-
+import { UnidadeMedida, Role } from "../types";
+import type { ProdutoResponse, ProdutoRequest, CategoriaResponse } from "../types";
+import { useUser } from "../auth/UserContext";
 
 const emptyForm: ProdutoRequest = {
     nome: "",
-    categoria: CategoriaProduto.OUTROS,
+    categoriaId: "",
     unidade: UnidadeMedida.UNIDADE,
     precoCompra: 0,
     precoVenda: 0,
@@ -23,6 +24,7 @@ const emptyForm: ProdutoRequest = {
 
 export default function Produtos() {
     const [produtos, setProdutos] = useState<ProdutoResponse[]>([]);
+    const [categorias, setCategorias] = useState<CategoriaResponse[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
@@ -36,6 +38,9 @@ export default function Produtos() {
     const [openDelete, setOpenDelete] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState<ProdutoResponse | null>(null);
 
+    const { hasAnyRole } = useUser();
+    const canManageProducts = hasAnyRole([Role.ADMIN, Role.GERENTE]);
+
     const fetchProdutos = useCallback(async () => {
         try {
             const { data } = await produtoService.listar();
@@ -47,23 +52,37 @@ export default function Produtos() {
         }
     }, []);
 
-    useEffect(() => { fetchProdutos(); }, [fetchProdutos]);
+    const fetchCategorias = useCallback(async () => {
+        try {
+            const { data } = await categoriaService.listar();
+            setCategorias(data);
+        } catch {
+            setError("Erro ao carregar categorias");
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchProdutos();
+        fetchCategorias();
+    }, [fetchProdutos, fetchCategorias]);
 
     const handleField = (field: keyof ProdutoRequest, value: string | number) => {
         setForm((prev) => ({ ...prev, [field]: value }));
     };
 
     const handleOpenNew = () => {
+        if (!canManageProducts) return;
         setEditingId(null);
         setForm(emptyForm);
         setOpenForm(true);
     };
 
     const handleOpenEdit = (p: ProdutoResponse) => {
+        if (!canManageProducts) return;
         setEditingId(p.id);
         setForm({
             nome: p.nome,
-            categoria: p.categoria,
+            categoriaId: p.categoria.id,
             unidade: p.unidade,
             precoCompra: p.precoCompra,
             precoVenda: p.precoVenda,
@@ -109,7 +128,7 @@ export default function Produtos() {
     const filtrados = produtos.filter(
         (p) =>
             p.nome.toLowerCase().includes(filtro.toLowerCase()) ||
-            p.categoria.toLowerCase().includes(filtro.toLowerCase())
+            p.categoria.nome.toLowerCase().includes(filtro.toLowerCase())
     );
 
     if (loading) {
@@ -131,9 +150,11 @@ export default function Produtos() {
                     size="small"
                     sx={{ flex: 1, minWidth: 220 }}
                 />
-                <Button variant="contained" startIcon={<Add />} onClick={handleOpenNew}>
-                    Novo Produto
-                </Button>
+                {canManageProducts && (
+                    <Button variant="contained" startIcon={<Add />} onClick={handleOpenNew}>
+                        Novo Produto
+                    </Button>
+                )}
             </Box>
 
             <TableContainer component={Paper}>
@@ -146,7 +167,7 @@ export default function Produtos() {
                             <TableCell align="right"><strong>Compra</strong></TableCell>
                             <TableCell align="right"><strong>Venda</strong></TableCell>
                             <TableCell align="right"><strong>Estoque</strong></TableCell>
-                            <TableCell align="center"><strong>Ações</strong></TableCell>
+                            {canManageProducts && <TableCell align="center"><strong>Ações</strong></TableCell>}
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -154,7 +175,7 @@ export default function Produtos() {
                             <TableRow key={p.id}>
                                 <TableCell>{p.nome}</TableCell>
                                 <TableCell>
-                                    <Chip label={p.categoria} size="small" />
+                                    <Chip label={p.categoria.nome} size="small" />
                                 </TableCell>
                                 <TableCell>{p.unidade}</TableCell>
                                 <TableCell align="right">{formatBRL(p.precoCompra)}</TableCell>
@@ -166,19 +187,21 @@ export default function Produtos() {
                                         color={p.estoqueAtual < p.estoqueMinimo ? "error" : "success"}
                                     />
                                 </TableCell>
-                                <TableCell align="center">
-                                    <IconButton size="small" onClick={() => handleOpenEdit(p)}>
-                                        <Edit fontSize="small" />
-                                    </IconButton>
-                                    <IconButton size="small" color="error" onClick={() => { setDeleteTarget(p); setOpenDelete(true); }}>
-                                        <Delete fontSize="small" />
-                                    </IconButton>
-                                </TableCell>
+                                {canManageProducts && (
+                                    <TableCell align="center">
+                                        <IconButton size="small" onClick={() => handleOpenEdit(p)}>
+                                            <Edit fontSize="small" />
+                                        </IconButton>
+                                        <IconButton size="small" color="error" onClick={() => { setDeleteTarget(p); setOpenDelete(true); }}>
+                                            <Delete fontSize="small" />
+                                        </IconButton>
+                                    </TableCell>
+                                )}
                             </TableRow>
                         ))}
                         {filtrados.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                                <TableCell colSpan={canManageProducts ? 7 : 6} align="center" sx={{ py: 4 }}>
                                     <Typography color="text.secondary">Nenhum produto encontrado.</Typography>
                                 </TableCell>
                             </TableRow>
@@ -192,8 +215,8 @@ export default function Produtos() {
                 <DialogTitle>{editingId ? "Editar Produto" : "Novo Produto"}</DialogTitle>
                 <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: "16px !important" }}>
                     <TextField label="Nome" value={form.nome} onChange={(e) => handleField("nome", e.target.value)} fullWidth />
-                    <TextField select label="Categoria" value={form.categoria} onChange={(e) => handleField("categoria", e.target.value)} fullWidth>
-                        {Object.values(CategoriaProduto).map((c) => <MenuItem key={c} value={c}>{c}</MenuItem>)}
+                    <TextField select label="Categoria" value={form.categoriaId} onChange={(e) => handleField("categoriaId", e.target.value)} fullWidth>
+                        {categorias.map((c) => <MenuItem key={c.id} value={c.id}>{c.nome}</MenuItem>)}
                     </TextField>
                     <TextField select label="Unidade" value={form.unidade} onChange={(e) => handleField("unidade", e.target.value)} fullWidth>
                         {Object.values(UnidadeMedida).map((u) => <MenuItem key={u} value={u}>{u}</MenuItem>)}
@@ -209,7 +232,7 @@ export default function Produtos() {
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setOpenForm(false)}>Cancelar</Button>
-                    <Button variant="contained" onClick={handleSave} disabled={!form.nome || saving}>
+                    <Button variant="contained" onClick={handleSave} disabled={!form.nome || !form.categoriaId || saving}>
                         {saving ? "Salvando..." : "Salvar"}
                     </Button>
                 </DialogActions>

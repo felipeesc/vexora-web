@@ -9,9 +9,10 @@ import dayjs from "dayjs";
 import { movimentacaoService } from "../services/movimentacaoService";
 import { relatorioService } from "../services/relatorioService";
 import { produtoService } from "../services/produtoService";
-import { TipoMovimentacao } from "../types";
+import { TipoMovimentacao, Role } from "../types";
 import type { MovimentacaoResponse, ProdutoResponse, MovimentacaoRequest } from "../types";
 import { formatDateTime } from "../utils/format";
+import { useUser } from "../auth/UserContext";
 
 export default function Movimentacoes() {
     const [movimentacoes, setMovimentacoes] = useState<MovimentacaoResponse[]>([]);
@@ -31,6 +32,9 @@ export default function Movimentacoes() {
         motivo: "",
     });
     const [saving, setSaving] = useState(false);
+
+    const { hasAnyRole } = useUser();
+    const canCreateMovimentacao = hasAnyRole([Role.ADMIN, Role.GERENTE]);
 
     const fetchMovimentacoes = useCallback(async () => {
         try {
@@ -97,9 +101,11 @@ export default function Movimentacoes() {
                 />
                 <Button variant="outlined" onClick={fetchMovimentacoes}>Buscar</Button>
                 <Box sx={{ flex: 1 }} />
-                <Button variant="contained" startIcon={<Add />} onClick={() => setOpenForm(true)}>
-                    Nova Movimentação
-                </Button>
+                {canCreateMovimentacao && (
+                    <Button variant="contained" startIcon={<Add />} onClick={() => setOpenForm(true)}>
+                        Nova Movimentação
+                    </Button>
+                )}
             </Box>
 
             {/* TABELA */}

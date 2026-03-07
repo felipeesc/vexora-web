@@ -13,7 +13,7 @@ export default function CriarConta() {
         username: "",
         password: "",
         confirmPassword: "",
-        role: Role.ROLE_USER as Role,
+        role: Role.FUNCIONARIO as Role,
     });
 
     const [loading, setLoading] = useState(false);
@@ -137,8 +137,9 @@ export default function CriarConta() {
                         onChange={(e) => handleChange("role", e.target.value)}
                         sx={{ mb: 3 }}
                     >
-                        <MenuItem value={Role.ROLE_USER}>Usuário</MenuItem>
-                        <MenuItem value={Role.ROLE_ADMIN}>Administrador</MenuItem>
+                        <MenuItem value={Role.FUNCIONARIO}>Funcionário</MenuItem>
+                        <MenuItem value={Role.GERENTE}>Gerente</MenuItem>
+                        <MenuItem value={Role.ADMIN}>Administrador</MenuItem>
                     </TextField>
 
                     <Button
